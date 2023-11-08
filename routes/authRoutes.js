@@ -17,6 +17,7 @@ router.post('/register', async (req, res) => {
     const registrationValidator = joi.object({
         // validate request data
         username: joi.string().required(),
+        email: joi.email().required(),
         phoneNumber: joi.string().required(),
         password: joi.string().required()
     });
@@ -31,6 +32,7 @@ router.post('/register', async (req, res) => {
     try {
         await userCollection.create({
             username: req.body.username,
+            email: req.body.email,
             phoneNumber: req.body.phoneNumber,
             password: hashedPassword
         });
@@ -81,15 +83,9 @@ router.post('/login', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
     try {
         // validate email
-        const {username, email} = req.body;
+        const {username} = req.body;
         const user = await userCollection.findOne({username});
         if (!user) return res.status(404).send('user-not-found');
-
-        const emailValidator = joi.string().email().required().messages({
-            "string.email": "Your email is not valid",
-            "any.required": "'email' field is required"
-        });
-        await emailValidator.validateAsync(email);
 
         // create token and otp for user
         // const uid = v4();
@@ -103,7 +99,7 @@ router.post('/forgot-password', async (req, res) => {
 
         // send token to user
         await sendMail.sendMail({
-           to: email,
+           to: user.email,
            subject: 'Password Reset Email',
            html: `
                 <div>
@@ -112,7 +108,7 @@ router.post('/forgot-password', async (req, res) => {
                     <div>and use the following to reset your password.</div>
                     <ul>
                         <li>UID: <strong>${encryptedUserObject}</strong></li>
-                        <li>OTP: ${otp}}</li>
+                        <li>OTP: ${otp}</li>
                     </ul>
                 </div>
             ` 
