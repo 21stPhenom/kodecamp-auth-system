@@ -17,7 +17,7 @@ router.post('/register', async (req, res) => {
     const registrationValidator = joi.object({
         // validate request data
         username: joi.string().required(),
-        email: joi.email().required(),
+        email: joi.string().email().required(),
         phoneNumber: joi.string().required(),
         password: joi.string().required()
     });
